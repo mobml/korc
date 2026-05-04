@@ -2,20 +2,11 @@ from datetime import datetime
 import json
 
 from django.db import transaction
-from django.http import HttpResponse
-from .models import Product, Ticket
+from .models import Product, Ticket, TicketItem
 from .serializers import ProductSerializer, TicketItemSerializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-# Create your views here.
-def index(request):
-    return HttpResponse("Vendify - POS system.")
-
-
-@api_view(['GET'])
-def hello_world(request):
-    return Response({"message": "Hello, world!"})
 
 @api_view(['GET'])
 def product_list(request):
@@ -48,3 +39,32 @@ def make_sale(request):
             'details': json.loads(request.body),
             'ticket_id': ticket.id
         })
+    
+@api_view(['POST'])
+def cancel_sale(request):
+    ticket_id = request.query_params.get('ticket_id')
+
+    # First we find the ticket
+    try:
+        ticket = Ticket.objects.get(id=ticket_id)
+    except Ticket.DoesNotExist:
+        return Response({'error': 'Ticket not found'}, status=404)
+    
+    # Then we check if the ticket is already cancelled
+    if ticket.status == 'CANCELLED':
+        return Response({'error': 'Ticket is already cancelled'}, status=400)
+    
+    # Then we update the stock quantities for each item in the ticket
+    ticket_items = TicketItem.objects.filter(ticket_id=ticket)
+
+    with transaction.atomic():
+
+        for item in ticket_items:
+            product = item.product_id
+            product.stock_quantity += item.quantity
+            product.save()
+    
+        # Finally we update the ticket status to cancelled
+        ticket.status = 'CANCELLED'
+        ticket.save()
+        return Response({'message': 'Sale cancelled successfully'})
