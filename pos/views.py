@@ -68,3 +68,32 @@ def cancel_sale(request):
         ticket.status = 'CANCELLED'
         ticket.save()
         return Response({'message': 'Sale cancelled successfully'})
+
+@api_view(['GET'])
+def get_ticket(request):
+    ticket_id = request.query_params.get('ticket_id')
+
+    # First we find the ticket
+    try:
+        ticket = Ticket.objects.get(id=ticket_id)
+    except Ticket.DoesNotExist:
+        return Response({'error': 'Ticket not found'}, status=404)
+    
+    # Then we get the items in the ticket
+    ticket_items = TicketItem.objects.filter(ticket_id=ticket)
+    items_data = []
+    for item in ticket_items:
+        name = Product.objects.get(id=item.product_id.id).name
+        items_data.append({
+            'product_name': name,
+            'quantity': item.quantity,
+            'price_at_time': item.price_at_time
+        })
+    
+    return Response({
+        'ticket_id': ticket.id,
+        'status': ticket.status,
+        'total_amount': ticket.total_amount,
+        'closed_at': ticket.closed_at,
+        'items': items_data
+    })
