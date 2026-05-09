@@ -7,17 +7,18 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class TicketItemSerializer(serializers.Serializer):
-    product_id = serializers.IntegerField()
-    quantity = serializers.IntegerField()
+    product = serializers.IntegerField()
     price_at_time = serializers.DecimalField(max_digits=10, decimal_places=2)
+    quantity = serializers.IntegerField()
 
     def create(self, validated_data, ticket):
-        product = Product.objects.get(id=validated_data['product_id'])
+        product = Product.objects.get(id=validated_data['product'])
+        
         ticket_item = TicketItem.objects.create(
-            product_id=product,
+            product=product,
             quantity=validated_data['quantity'],
             price_at_time=validated_data['price_at_time'],
-            ticket_id=ticket
+            ticket=ticket
         )
         # Update stock quantity
         product.stock_quantity -= validated_data['quantity']
@@ -27,7 +28,7 @@ class TicketItemSerializer(serializers.Serializer):
     def validate(self, data):
         # Validate that the product exists
         try:
-            product = Product.objects.get(id=data['product_id'])
+            product = Product.objects.get(id=data['product'])
         except Product.DoesNotExist:
             raise serializers.ValidationError("Product does not exist.")
 

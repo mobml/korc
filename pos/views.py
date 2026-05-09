@@ -1,11 +1,9 @@
-from datetime import datetime
-import json
-
 from django.db import transaction
 
 from pos.selectors import product_all
-from .models import Product, Ticket, TicketItem
-from .serializers import TicketItemSerializer
+from pos.services import sale_create
+from pos.models import Product, Ticket, TicketItem
+from pos.serializers import TicketItemSerializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
@@ -16,29 +14,14 @@ def product_list(request):
 
 @api_view(['POST'])
 def make_sale(request):
-    with transaction.atomic():
 
-        #first we create a ticket
-        ticket = Ticket.objects.create()
+    ticket = sale_create(request.data)
 
-        #then we add items to the ticket
-        total = 0
-        for item in json.loads(request.body):
-            ticket_item = TicketItemSerializer(data=item)
-            ticket_item.is_valid(raise_exception=True)
-            ticket_item.create(ticket_item.validated_data, ticket=ticket)
-            total += ticket_item.validated_data['quantity'] * ticket_item.validated_data['price_at_time']
-
-        ticket.total_amount = total
-        ticket.status = 'CLOSED'
-        ticket.closed_at = datetime.isoformat(datetime.now())
-        ticket.save()
-
-        return Response({
-            'message': 'Sale processed successfully',
-            'details': json.loads(request.body),
-            'ticket_id': ticket.id
-        })
+    return Response({
+        'message': 'Sale processed successfully',
+        'details': request.data,
+        'ticket_id': ticket.id
+    })
     
 @api_view(['POST'])
 def cancel_sale(request):
