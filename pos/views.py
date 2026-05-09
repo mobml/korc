@@ -1,9 +1,8 @@
 from django.db import transaction
 
 from pos.selectors import product_all
-from pos.services import sale_create
+from pos.services import sale_create, ticket_get, ticket_item_get_by_ticket
 from pos.models import Product, Ticket, TicketItem
-from pos.serializers import TicketItemSerializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
@@ -53,30 +52,23 @@ def cancel_sale(request):
         return Response({'message': 'Sale cancelled successfully'})
 
 @api_view(['GET'])
-def get_ticket(request):
-    ticket_id = request.query_params.get('ticket_id')
-
+def get_ticket(request, ticket_id):
     # First we find the ticket
-    try:
-        ticket = Ticket.objects.get(id=ticket_id)
-    except Ticket.DoesNotExist:
-        return Response({'error': 'Ticket not found'}, status=404)
     
-    # Then we get the items in the ticket
-    ticket_items = TicketItem.objects.filter(ticket_id=ticket)
-    items_data = []
-    for item in ticket_items:
-        name = Product.objects.get(id=item.product_id.id).name
-        items_data.append({
-            'product_name': name,
-            'quantity': item.quantity,
-            'price_at_time': item.price_at_time
-        })
+    ticket = ticket_get(ticket_id)
+
+    if not ticket:
+        return Response(
+            {'error': 'Ticket not found'}, 
+            status=404
+        )
     
+    named_items = ticket_item_get_by_ticket(ticket)
+
     return Response({
         'ticket_id': ticket.id,
         'status': ticket.status,
         'total_amount': ticket.total_amount,
         'closed_at': ticket.closed_at,
-        'items': items_data
+        'items': named_items
     })
