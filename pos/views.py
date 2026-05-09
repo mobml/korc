@@ -2,17 +2,17 @@ from datetime import datetime
 import json
 
 from django.db import transaction
+
+from pos.selectors import product_all
 from .models import Product, Ticket, TicketItem
-from .serializers import ProductSerializer, TicketItemSerializer
+from .serializers import TicketItemSerializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 
 @api_view(['GET'])
 def product_list(request):
-    products = Product.objects.all()
-    serializer = ProductSerializer(products, many=True)
-    return Response(serializer.data)
+    return Response(product_all())
 
 @api_view(['POST'])
 def make_sale(request):
