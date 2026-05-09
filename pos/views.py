@@ -63,12 +63,12 @@ def get_ticket(request, ticket_id):
             status=404
         )
     
-    named_items = ticket_item_get_by_ticket(ticket)
+    items = ticket_item_get_by_ticket(ticket)
 
     return Response({
         'ticket_id': ticket.id,
         'status': ticket.status,
         'total_amount': ticket.total_amount,
         'closed_at': ticket.closed_at,
-        'items': named_items
+        'items': items
     })
