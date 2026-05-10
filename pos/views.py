@@ -5,11 +5,11 @@ from rest_framework.response import Response
 
 
 @api_view(['GET'])
-def product_list(request):
+def product_list_api(request):
     return Response(product_all())
 
 @api_view(['POST'])
-def make_sale(request):
+def sale_create_api(request):
 
     ticket = sale_create(request.data)
 
@@ -20,7 +20,7 @@ def make_sale(request):
     })
     
 @api_view(['POST'])
-def cancel_sale(request, ticket_id):
+def sale_cancel_api(request, ticket_id):
     # First we find the ticket
     
     ticket = ticket_get(ticket_id)
@@ -47,7 +47,7 @@ def cancel_sale(request, ticket_id):
     return Response({'message': 'Sale cancelled successfully'})
 
 @api_view(['GET'])
-def get_ticket(request, ticket_id):
+def ticket_get_details_api(request, ticket_id):
     # First we find the ticket
     
     ticket = ticket_get(ticket_id)
