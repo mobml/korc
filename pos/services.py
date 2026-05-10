@@ -34,9 +34,28 @@ def sale_create(ticket_items: list) -> Ticket:
 
     return ticket
 
+@transaction.atomic()
+def sale_cancel(ticket: Ticket) -> Ticket:
+     
+     # Firt we find the ticket items for the given ticket
+    ticket_items = TicketItem.objects.filter(ticket_id=ticket)
+
+    # Then we update the stock quantities for each item in the ticket
+    for item in ticket_items:
+        product = item.product
+        product.stock_quantity += item.quantity
+        product.save()
+
+    # Finally we update the ticket status to cancelled
+    ticket.status = 'CANCELLED'
+    ticket.save()
+
+    return ticket
+
 """ TicketItem service functions. """
 
-def ticket_item_get_by_ticket(ticket: Ticket) -> list[TicketItem]:
+# Return a list of ticket items for a given ticket, including the product name, quantity, and price at the time of sale.
+def ticket_items_get_by_ticket(ticket: Ticket) -> list[TicketItem]:
 
     ticket_items = TicketItem.objects.filter(ticket_id=ticket)
     named_ticket_items = []

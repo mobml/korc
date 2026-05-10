@@ -1,8 +1,5 @@
-from django.db import transaction
-
 from pos.selectors import product_all
-from pos.services import sale_create, ticket_get, ticket_item_get_by_ticket
-from pos.models import Product, Ticket, TicketItem
+from pos.services import sale_cancel, sale_create, ticket_get,  ticket_items_get_by_ticket
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
@@ -23,33 +20,31 @@ def make_sale(request):
     })
     
 @api_view(['POST'])
-def cancel_sale(request):
-    ticket_id = request.query_params.get('ticket_id')
-
+def cancel_sale(request, ticket_id):
     # First we find the ticket
-    try:
-        ticket = Ticket.objects.get(id=ticket_id)
-    except Ticket.DoesNotExist:
-        return Response({'error': 'Ticket not found'}, status=404)
+    
+    ticket = ticket_get(ticket_id)
+    
+    if not ticket:
+        return Response(
+            {'error': 'Ticket not found'}, 
+            status=404
+        )
     
     # Then we check if the ticket is already cancelled
     if ticket.status == 'CANCELLED':
-        return Response({'error': 'Ticket is already cancelled'}, status=400)
+        return Response(
+            {'error': 'Ticket is already cancelled'}, 
+            status=400
+        )
     
-    # Then we update the stock quantities for each item in the ticket
-    ticket_items = TicketItem.objects.filter(ticket_id=ticket)
+    if not sale_cancel(ticket):
+        return Response(
+            {'error': 'Failed to cancel the sale'}, 
+            status=500
+        )
 
-    with transaction.atomic():
-
-        for item in ticket_items:
-            product = item.product_id
-            product.stock_quantity += item.quantity
-            product.save()
-    
-        # Finally we update the ticket status to cancelled
-        ticket.status = 'CANCELLED'
-        ticket.save()
-        return Response({'message': 'Sale cancelled successfully'})
+    return Response({'message': 'Sale cancelled successfully'})
 
 @api_view(['GET'])
 def get_ticket(request, ticket_id):
@@ -63,7 +58,7 @@ def get_ticket(request, ticket_id):
             status=404
         )
     
-    items = ticket_item_get_by_ticket(ticket)
+    items = ticket_items_get_by_ticket(ticket)
 
     return Response({
         'ticket_id': ticket.id,
