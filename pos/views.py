@@ -20,10 +20,10 @@ def sale_create_api(request):
     })
     
 @api_view(['POST'])
-def sale_cancel_api(request, ticket_id):
+def sale_cancel_api(request, sale_id):
     # First we find the ticket
     
-    ticket = ticket_get(ticket_id)
+    ticket = ticket_get(sale_id)
     
     if not ticket:
         return Response(
@@ -47,10 +47,10 @@ def sale_cancel_api(request, ticket_id):
     return Response({'message': 'Sale cancelled successfully'})
 
 @api_view(['GET'])
-def ticket_get_details_api(request, ticket_id):
+def ticket_get_details_api(request, sale_id):
     # First we find the ticket
     
-    ticket = ticket_get(ticket_id)
+    ticket = ticket_get(sale_id)
 
     if not ticket:
         return Response(

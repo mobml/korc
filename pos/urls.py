@@ -1,10 +1,11 @@
-from django.urls import path, include
+from django.urls import path
 from . import views
 
+BASE_URL = 'api/v1/'
 
 urlpatterns = [
-    path('api/v1/products/', views.product_list_api, name='product_list_api'),
-    path('api/v1/make_sale/', views.sale_create_api, name='sale_create_api'),
-    path('api/v1/cancel_sale/<int:ticket_id>/', views.sale_cancel_api, name='sale_cancel_api'),
-    path('api/v1/ticket/<int:ticket_id>/', views.ticket_get_details_api, name='ticket_get_details_api')
+    path(f'{BASE_URL}products/', views.product_list_api, name='product_list_api'),
+    path(f'{BASE_URL}sales/', views.sale_create_api, name='sale_create_api'),
+    path(f'{BASE_URL}sales/<int:sale_id>/', views.sale_cancel_api, name='sale_cancel_api'),
+    path(f'{BASE_URL}sales/<int:sale_id>/ticket/', views.ticket_get_details_api, name='ticket_get_details_api')
 ]
