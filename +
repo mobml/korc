@@ -1,0 +1,81 @@
+from pos.models import Product, Sale, SaleItem
+from pos.serializers import TicketItemSerializer
+from django.utils import timezone
+from django.db import transaction
+
+"""
+Ticket service functions.
+"""
+
+
+def sale_create() -> Sale:
+    return Sale.objects.create()
+
+
+def sale_get(ticket_id: int) -> Sale | None:
+    try:
+        return Ticket.objects.get(id=ticket_id)
+    except Ticket.DoesNotExist:
+        return None
+
+
+@transaction.atomic()
+def sale_and_saleitems_create(ticket_items: list) -> Ticket:
+    ticket = ticket_create()
+
+    total = 0
+    for item in ticket_items:
+        ticket_item = TicketItemSerializer(data=item)
+        ticket_item.is_valid(raise_exception=True)
+        ticket_item.create(ticket_item.validated_data, ticket=ticket)
+        total += (
+            ticket_item.validated_data["quantity"]
+            * ticket_item.validated_data["price_at_time"]
+        )
+
+    ticket.total_amount = total
+    ticket.status = "CLOSED"
+    ticket.closed_at = timezone.now()
+    ticket.save()
+
+    return ticket
+
+
+@transaction.atomic()
+def sale_cancel(ticket: Ticket) -> Ticket:
+
+    # Firt we find the ticket items for the given ticket
+    ticket_items = TicketItem.objects.filter(ticket_id=ticket)
+
+    # Then we update the stock quantities for each item in the ticket
+    for item in ticket_items:
+        product = item.product
+        product.stock_quantity += item.quantity
+        product.save()
+
+    # Finally we update the ticket status to cancelled
+    ticket.status = "CANCELLED"
+    ticket.save()
+
+    return ticket
+
+
+""" TicketItem service functions. """
+
+
+# Return a list of ticket items for a given ticket, including the product name, quantity, and price at the time of sale.
+def ticket_items_get_by_ticket(ticket: Ticket) -> list[TicketItem]:
+
+    ticket_items = TicketItem.objects.filter(ticket_id=ticket)
+    named_ticket_items = []
+
+    for item in ticket_items:
+        name = Product.objects.get(id=item.product.id).name
+        named_ticket_items.append(
+            {
+                "product_name": name,
+                "quantity": item.quantity,
+                "price_at_time": item.price_at_time,
+            }
+        )
+    return named_ticket_items

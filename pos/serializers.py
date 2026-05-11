@@ -1,52 +1,54 @@
-from .models import Product, Ticket, TicketItem
+from .models import Product, Sale, SaleItem
 from rest_framework import serializers
+
 
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = '__all__'
+        fields = "__all__"
 
-class TicketItemSerializer(serializers.Serializer):
+
+class SaleItemSerializer(serializers.Serializer):
     product = serializers.IntegerField()
     price_at_time = serializers.DecimalField(max_digits=10, decimal_places=2)
     quantity = serializers.IntegerField()
 
-    def create(self, validated_data, ticket):
-        product = Product.objects.get(id=validated_data['product'])
-        
-        ticket_item = TicketItem.objects.create(
+    def create(self, validated_data, sale):
+        product = Product.objects.get(id=validated_data["product"])
+
+        sale_item = SaleItem.objects.create(
             product=product,
-            quantity=validated_data['quantity'],
-            price_at_time=validated_data['price_at_time'],
-            ticket=ticket
+            quantity=validated_data["quantity"],
+            price_at_time=validated_data["price_at_time"],
+            sale=sale,
         )
         # Update stock quantity
-        product.stock_quantity -= validated_data['quantity']
+        product.stock_quantity -= validated_data["quantity"]
         product.save()
-        return ticket_item
+        return sale_item
 
     def validate(self, data):
         # Validate that the product exists
         try:
-            product = Product.objects.get(id=data['product'])
+            product = Product.objects.get(id=data["product"])
         except Product.DoesNotExist:
             raise serializers.ValidationError("Product does not exist.")
 
         # Validate that there is enough stock
-        if data['quantity'] > product.stock_quantity:
+        if data["quantity"] > product.stock_quantity:
             raise serializers.ValidationError("Not enough stock available.")
-        
-        if data['quantity'] <= 0:
+
+        if data["quantity"] <= 0:
             raise serializers.ValidationError("Quantity must be greater than zero.")
-        
-        if data['price_at_time'] == None:
+
+        if data["price_at_time"] == None:
             raise serializers.ValidationError("Price at time is required.")
 
-        if data['price_at_time'] <= 0:
+        if data["price_at_time"] <= 0:
             raise serializers.ValidationError("Price must be greater than zero.")
-    
-        if data['price_at_time'] < product.cost_price:
+
+        if data["price_at_time"] < product.cost_price:
             raise serializers.ValidationError("Price cannot be less than cost price.")
 
         return data
-    
+

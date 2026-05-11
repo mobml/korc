@@ -1,5 +1,5 @@
-from pos.models import Product, Ticket, TicketItem
-from pos.serializers import TicketItemSerializer
+from pos.models import Product, Sale, SaleItem
+from pos.serializers import SaleItemSerializer
 from django.utils import timezone
 from django.db import transaction
 
@@ -7,64 +7,72 @@ from django.db import transaction
 Ticket service functions.
 """
 
-def ticket_create() -> Ticket:
-    return Ticket.objects.create()
 
-def ticket_get(ticket_id: int) -> Ticket | None:
+def sale_create() -> Sale:
+    return Sale.objects.create()
+
+
+def sale_get(ticket_id: int) -> Sale | None:
     try:
-        return Ticket.objects.get(id=ticket_id)
-    except Ticket.DoesNotExist:
+        return Sale.objects.get(id=ticket_id)
+    except Sale.DoesNotExist:
         return None
 
+
 @transaction.atomic()
-def sale_create(ticket_items: list) -> Ticket:
-    ticket = ticket_create()
-    
+def sale_and_sale_items_create(sale_items: list) -> Sale:
+    sale = sale_create()
+
     total = 0
-    for item in ticket_items:
-            ticket_item = TicketItemSerializer(data=item)
-            ticket_item.is_valid(raise_exception=True)
-            ticket_item.create(ticket_item.validated_data, ticket=ticket)
-            total += ticket_item.validated_data['quantity'] * ticket_item.validated_data['price_at_time']
-    
-    ticket.total_amount = total
-    ticket.status = 'CLOSED'
-    ticket.closed_at = timezone.now()
-    ticket.save()
+    for item in sale_items:
+        item = SaleItemSerializer(data=item)
+        item.is_valid(raise_exception=True)
+        item.create(item.validated_data, sale=sale)
+        total += item.validated_data["quantity"] * item.validated_data["price_at_time"]
 
-    return ticket
+    sale.total_amount = total
+    sale.status = "CLOSED"
+    sale.closed_at = timezone.now()
+    sale.save()
+
+    return sale
+
 
 @transaction.atomic()
-def sale_cancel(ticket: Ticket) -> Ticket:
-     
-     # Firt we find the ticket items for the given ticket
-    ticket_items = TicketItem.objects.filter(ticket_id=ticket)
+def sale_cancel(sale: Sale) -> Sale:
+
+    # Firt we find the ticket items for the given ticket
+    sale_items = SaleItem.objects.filter(sale_id=sale)
 
     # Then we update the stock quantities for each item in the ticket
-    for item in ticket_items:
+    for item in sale_items:
         product = item.product
         product.stock_quantity += item.quantity
         product.save()
 
     # Finally we update the ticket status to cancelled
-    ticket.status = 'CANCELLED'
-    ticket.save()
+    sale.status = "CANCELLED"
+    sale.save()
 
-    return ticket
+    return sale
+
 
 """ TicketItem service functions. """
 
+
 # Return a list of ticket items for a given ticket, including the product name, quantity, and price at the time of sale.
-def ticket_items_get_by_ticket(ticket: Ticket) -> list[TicketItem]:
+def sale_items_get_by_sale(sale: Sale) -> list[SaleItem]:
 
-    ticket_items = TicketItem.objects.filter(ticket_id=ticket)
-    named_ticket_items = []
+    sale_items = SaleItem.objects.filter(sale_id=sale)
+    named_sale_items = []
 
-    for item in ticket_items:
+    for item in sale_items:
         name = Product.objects.get(id=item.product.id).name
-        named_ticket_items.append({
-            'product_name': name,
-            'quantity': item.quantity,
-            'price_at_time': item.price_at_time
-        })
-    return named_ticket_items
+        named_sale_items.append(
+            {
+                "product_name": name,
+                "quantity": item.quantity,
+                "price_at_time": item.price_at_time,
+            }
+        )
+    return named_sale_items
