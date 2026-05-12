@@ -1,8 +1,17 @@
 # Vendify
 
-Vendify is an API first platform that brings resources to manage sales.
+Vendify is an API-first sales management platform built with Django REST Framework.
+It provides tools to manage products, sales, and tickets through a simple and extensible REST API.
 
-## Instalation
+## Features
+
+- Product management
+- Sales processing
+- Ticket generation
+- REST API
+- Docker support
+
+## Installation
 
 ### Requirements
 
@@ -47,15 +56,15 @@ DB_HOST=localhost
 #### Database container
 
 ```bash
-docker compose up --build
+docker compose up --build -d
 # or
-podman compose up -d
+podman compose up --build -d
 ```
 
 #### App server (develop mode)
 
 ```bash
-python manage.py migrations
+python manage.py migrate
 python manage.py createsuperuser
 python manage.py runserver
 ```
@@ -78,7 +87,7 @@ Endpoints:
 
 | Method | Endpoint          | Description        |
 |--------|-------------------|--------------------|
-|GET     |`/products`        |Get a list od products|
+|GET     |`/products`        |Get a list of products|
 |POST    |`/sales`           |Make a sale         |
-|POST    |`/sales/:id`       |Cancel a sale       |
+|POST    |`/sales/:id/cancel`|Cancel a sale       |
 |GET     |`/sales/:id/ticket`|Get a ticket      |
