@@ -2,9 +2,10 @@
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="./assets/banner_light.svg">
     <source media="(prefers-color-scheme: light)" srcset="./assets/banner_dark.svg">
-    <img alt="Banner" src="./assets/banner_dark.svg" width="850">
+    <img alt="Banner" src="./assets/banner_dark.svg" style="width: 700px;">
   </picture>
 </p>
+
 # Korc
 
 Korc is an API-first sales management platform.
