@@ -1,8 +1,8 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./assets/banner_light.svg">
-    <source media="(prefers-color-scheme: light)" srcset="./assets/banner_dark.svg">
-    <img alt="Banner" src="./assets/banner_dark.svg" style="width: 700px;">
+    <source media="(prefers-color-scheme: dark)" srcset="./assets/banner_dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="./assets/banner_light.svg">
+    <img alt="Banner" src="./assets/banner_dark.svg" width="850">
   </picture>
 </p>
 
