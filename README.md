@@ -22,8 +22,8 @@ It provides tools to manage products, sales, and tickets through a simple and ex
 ### 1. Clone repository
 
 ```bash
-git clone https://github.com/mobml/Vendify
-cd vendify
+git clone https://github.com/mobml/korc
+cd korc
 ```
 
 ### 2. Create a virtual environment & activate it(optional)
