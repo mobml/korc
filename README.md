@@ -1,6 +1,6 @@
-# Vendify
+# Korc
 
-Vendify is an API-first sales management platform built with Django REST Framework.
+Korc is an API-first sales management platform.
 It provides tools to manage products, sales, and tickets through a simple and extensible REST API.
 
 ## Features
