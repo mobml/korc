@@ -1,3 +1,4 @@
+from account.exceptions import UserInvalidRoleChange
 from account.models import User
 
 
@@ -24,3 +25,15 @@ def users_list_all() -> list[User]:
     users = User.objects.all()
 
     return users
+
+def user_change_role(user: User, role: User.Role):
+    if user.role == User.Role.OWNER:
+        raise UserInvalidRoleChange("The user owner role cannot change")
+
+    update_count = User.objects.filter(id=user.id).update(role=role)
+
+    if update_count == 0:
+        raise User.DoesNotExist("There is no such user")
+
+    user.role = role
+    return user

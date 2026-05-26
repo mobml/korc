@@ -1,3 +1,6 @@
+import uuid
+from account.exceptions import UserInvalidRoleChange
+import email
 from django.test import TestCase
 from account import services
 from account.models import User
@@ -41,3 +44,21 @@ class UserServiceCreateTest(TestCase):
         self.assertEqual(users_list[0].email, "test@email.com")
         self.assertEqual(users_list[1].email, "test1@email.com")
         self.assertEqual(users_list[2].email, "test2@email.com")
+
+    def test_superuser_change_role(self):
+        user = services.superuser_create(email="test@email.com", password="pass")
+
+        with self.assertRaisesMessage(UserInvalidRoleChange, "The user owner role cannot change"):
+            services.user_change_role(user, User.Role.ADMIN)            
+
+    def test_user_does_not_exists_change_role(self):
+        id = uuid.uuid4()
+        user = User(id=id)
+        with self.assertRaisesMessage(User.DoesNotExist, "There is no such user"):
+            services.user_change_role(user, User.Role.ADMIN)            
+
+    def test_user_change_role(self):
+        user = services.user_create(email="test@email.com", password="pass")
+
+        user = services.user_change_role(user, User.Role.ADMIN)
+        self.assertEqual(User.Role.ADMIN, user.role)
