@@ -16,3 +16,16 @@ class UserServiceCreateTest(TestCase):
         self.assertEqual(user_one.role, User.Role.CASHIER)
         self.assertEqual(user_two.role, User.Role.CASHIER)
         self.assertEqual(2, total)
+
+    def test_superuser_create(self):
+        user = services.superuser_create(email="test@email.com", password="testpass")
+        user_two = services.superuser_create(email="test1@email.com", password="testpass")
+        user_three = services.superuser_create(email="test2@email.com", password="testpass")
+
+        total = User.objects.count()
+            
+        self.assertEqual(user.role, User.Role.OWNER)
+        self.assertTrue(user.is_superuser)
+        self.assertEqual(user_two.email, user.email)
+        self.assertEqual(user_three.email, user.email)
+        self.assertEqual(1, total)
