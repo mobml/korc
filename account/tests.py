@@ -29,3 +29,15 @@ class UserServiceCreateTest(TestCase):
         self.assertEqual(user_two.email, user.email)
         self.assertEqual(user_three.email, user.email)
         self.assertEqual(1, total)
+
+    def test_users_list_all(self):
+        services.user_create(email="test@email.com", password="pass")
+        services.user_create(email="test1@email.com", password="pass")
+        services.user_create(email="test2@email.com", password="pass")
+
+        users_list = services.users_list_all()
+
+        self.assertEqual(len(users_list), 3)
+        self.assertEqual(users_list[0].email, "test@email.com")
+        self.assertEqual(users_list[1].email, "test1@email.com")
+        self.assertEqual(users_list[2].email, "test2@email.com")

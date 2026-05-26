@@ -17,3 +17,10 @@ def superuser_create(email: str, password: str) -> User:
         user = User.objects.create_superuser(email=email, password=password)    
     
     return user
+
+#this functions list all users
+# even that are not active
+def users_list_all() -> list[User]:
+    users = User.objects.all()
+
+    return users
