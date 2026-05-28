@@ -44,6 +44,28 @@ class UserServiceCreateTest(TestCase):
         self.assertEqual(users_list[1].email, "test1@email.com")
         self.assertEqual(users_list[2].email, "test2@email.com")
 
+    def test_users_list_active(self):
+        user_one = services.user_create(email="test@email.com", password="pass")
+        user_two = services.user_create(email="test1@email.com", password="pass")
+        services.user_create(email="test2@email.com", password="pass")
+
+        active_users = services.users_list_active()
+
+        self.assertEqual(len(active_users), 3)
+
+        user_one = services.user_toggle_active(user_one)
+        user_two = services.user_toggle_active(user_two)
+
+        active_users = services.users_list_active()
+
+        self.assertEqual(len(active_users), 1)
+        
+        services.user_toggle_active(user_one)
+        services.user_toggle_active(user_two)
+
+        active_users = services.users_list_active()
+        self.assertEqual(len(active_users), 3)
+
     def test_superuser_change_role(self):
         user = services.superuser_create(email="test@email.com", password="pass")
 

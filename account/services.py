@@ -28,6 +28,12 @@ def users_list_all() -> list[User]:
 
     return users
 
+# Lists all active users
+def users_list_active():
+    users = User.objects.filter(is_active=True)
+
+    return users
+
 def user_change_role(user: User, role: User.Role) -> User:
     if user.role == User.Role.OWNER:
         raise UserInvalidRoleChange("The user owner role cannot change")
