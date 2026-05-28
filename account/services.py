@@ -1,4 +1,4 @@
-from account.exceptions import UserInvalidRoleChange, SuperUserDeactivationError
+from account.exceptions import UserInvalidRoleChange, SuperUserDeactivationError, SuperUserExists
 from account.models import User
 from django.db.models import F
 
@@ -9,13 +9,15 @@ def user_create(email: str, password: str) -> User:
 
 def superuser_create(email: str, password: str) -> User:
 
-    #if already existes an OWNER then we return None
+    #if already exists an OWNER then we raise an error
     # Only can exits one owner
 
-    try:
-        user = User.objects.get(role=User.Role.OWNER)
-    except User.DoesNotExist:
-        user = User.objects.create_superuser(email=email, password=password)    
+    users = User.objects.filter(role=User.Role.OWNER)
+
+    if users:
+        raise SuperUserExists("The owner user already exists")
+
+    user = User.objects.create_superuser(email=email, password=password)    
     
     return user
 

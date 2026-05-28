@@ -10,3 +10,7 @@ class UserInvalidRoleChange(UserError):
 class SuperUserDeactivationError(UserError):
     """Raised when there is a try to deactivete a superuser"""
     pass
+
+class SuperUserExists(UserError):
+    """Raised when trying to create a superuser but already exists one"""
+    pass
