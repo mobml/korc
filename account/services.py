@@ -1,6 +1,6 @@
-from account.exceptions import UserInvalidRoleChange
+from account.exceptions import UserInvalidRoleChange, SuperUserDeactivationError
 from account.models import User
-
+from django.db.models import F
 
 def user_create(email: str, password: str) -> User:
     user = User.objects.create_user(email=email, password=password)
@@ -26,7 +26,7 @@ def users_list_all() -> list[User]:
 
     return users
 
-def user_change_role(user: User, role: User.Role):
+def user_change_role(user: User, role: User.Role) -> User:
     if user.role == User.Role.OWNER:
         raise UserInvalidRoleChange("The user owner role cannot change")
 
@@ -36,4 +36,18 @@ def user_change_role(user: User, role: User.Role):
         raise User.DoesNotExist("There is no such user")
 
     user.role = role
+    return user
+
+def user_toggle_active(user: User) -> User:
+    if user.role == User.Role.OWNER:
+        raise SuperUserDeactivationError("The user owner is always active")
+
+    update_count = User.objects.filter(id=user.id).update(
+        is_active=~F("is_active")
+    )
+
+    if update_count == 0:
+        raise User.DoesNotExist("There is no such user")
+
+    user.is_active = not user.is_active
     return user

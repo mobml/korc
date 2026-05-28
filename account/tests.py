@@ -1,5 +1,5 @@
 import uuid
-from account.exceptions import UserInvalidRoleChange
+from account.exceptions import UserInvalidRoleChange, SuperUserDeactivationError
 import email
 from django.test import TestCase
 from account import services
@@ -62,3 +62,22 @@ class UserServiceCreateTest(TestCase):
 
         user = services.user_change_role(user, User.Role.ADMIN)
         self.assertEqual(User.Role.ADMIN, user.role)
+
+    def test_user_toggle_active_owner(self):
+        user = services.superuser_create(email="test@email.com", password="pass")
+
+        with self.assertRaisesMessage(SuperUserDeactivationError, "The user owner is always active"):
+            services.user_toggle_active(user)
+
+    def test_user_toggle_active_no_existent_user(self):
+        id = uuid.uuid4()
+        user = User(id=id)
+        with self.assertRaisesMessage(User.DoesNotExist, "There is no such user"):
+            services.user_toggle_active(user)            
+
+    def test_user_toggle_active(self):
+        user = services.user_create(email="test@email.com", password="pass")
+
+        user = services.user_toggle_active(user)
+
+        self.assertEqual(user.is_active, False)
